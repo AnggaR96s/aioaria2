@@ -40,7 +40,7 @@ def main():
         author_email="diguohuangjiajinweijun@gmail.com",
         maintainer="v-vinson",
         python_requires=">=3.6",
-        install_requires=["aiohttp", "aiofiles", "typing-extensions"],
+        install_requires=["aiohttp", "aiofiles", "typing-extensions", "curl_cffi"],
         license="GPLv3",
         classifiers=[
             "Development Status :: 3 - Alpha",

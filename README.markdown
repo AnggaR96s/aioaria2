@@ -215,3 +215,66 @@ pprint(DHTFile.from_file2("dht.dat"))
 ### v1.3.6
 
 * update latest aiohttp version
+
+## TLS (JA3/JA4) & HTTP/2 Fingerprint Spoofing
+
+Aria2 natively does not support changing its TLS Fingerprint (JA3) or HTTP/2 Fingerprint (Akamai), which are often used by anti-bot protections (like Cloudflare, Akamai, etc.) to block non-browser traffic.
+
+`aioaria2` now includes a local proxy (`Aria2BrowserProxy`) that can intercept aria2 requests and forward them using `curl_cffi`. This allows you to fully impersonate a real browser (e.g., Chrome, Safari) at the network layer.
+
+**Features Supported:**
+*   **JA3 / JA4 Signatures:** Matches the TLS handshake of a real browser.
+*   **HTTP/2 Fingerprinting:** Matches the HTTP/2 frame settings and order of a real browser.
+*   **Header Ordering:** Sends headers in the correct order for the impersonated browser.
+
+### Usage
+
+```python
+import asyncio
+from aioaria2 import Aria2BrowserProxy, Aria2HttpClient
+
+async def main():
+    # 1. Start the Spoofing Proxy
+    # 'impersonate' can be "chrome", "safari", "edge", etc.
+    # This will spoof JA3, JA4, and HTTP/2 fingerprints.
+    proxy = Aria2BrowserProxy(port=0, impersonate="chrome")
+    await proxy.start()
+
+    proxy_url = proxy.address
+    print(f"Proxy started at {proxy_url}")
+
+    # 2. Configure aria2 to use this proxy
+    # NOTE: You must use 'http' scheme for the target URL in aria2
+    # and pass the 'X-Target-Scheme: https' header so the proxy knows to use HTTPS upstream.
+    # This is required because aria2c's native CONNECT method for HTTPS would expose its own fingerprint.
+
+    target_url = "http://target-site.com/file.zip" # Use http here to talk to the proxy
+
+    options = {
+        "all-proxy": proxy_url,
+        "header": [
+            "X-Target-Scheme: https",  # Tell proxy to fetch https
+            "User-Agent: Mozilla/5.0..." # Optional: match the impersonated browser
+        ]
+    }
+
+    async with Aria2HttpClient("http://127.0.0.1:6800/jsonrpc", token="token") as client:
+        await client.addUri([target_url], options=options)
+        print("Download started with Browser Impersonation!")
+
+    # Keep proxy running while downloading...
+    # await proxy.stop() # call this when done
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+### Dependencies
+
+To use this feature, you must install `curl_cffi`:
+
+```bash
+pip install curl_cffi
+```
+
+(This is automatically installed if you install `aioaria2` with dependencies).

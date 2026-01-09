@@ -5,6 +5,7 @@
 from aioaria2.client import Aria2HttpClient, Aria2WebsocketClient, Aria2WebsocketTrigger
 from aioaria2.exceptions import Aria2rpcException
 from aioaria2.parser import ControlFile, DHTFile
+from aioaria2.proxy import Aria2BrowserProxy
 from aioaria2.server import Aria2Server, AsyncAria2Server
 from aioaria2.utils import add_async_callback, run_sync
 
@@ -22,6 +23,7 @@ __all__ = [
     "DHTFile",
     "run_sync",
     "add_async_callback",
+    "Aria2BrowserProxy",
 ]
 
 #
