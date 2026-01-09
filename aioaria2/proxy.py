@@ -131,9 +131,11 @@ class Aria2BrowserProxy:
                     async for chunk in resp.aiter_content():
                         await response.write(chunk)
                     await response.write_eof()
-                except Exception:
+                except (ConnectionResetError, RuntimeError):
                     # Client disconnected or error writing response
                     pass
+                except Exception as e:
+                     logger.debug(f"Error writing response: {e}")
 
                 return response
 
